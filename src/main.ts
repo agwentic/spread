@@ -6,6 +6,7 @@ import type { BuildingId, GameState } from './engine/types';
 import { buyBuildings } from './engine/sim';
 import { deployCount, getBuyMode, invalidate, render, setBuyMode, setTab } from './ui/render';
 import { playReveal } from './ui/reveal';
+import { announceAchievements, closeAchievements, toggleAchievements } from './ui/achievements';
 
 const root = document.getElementById('app')!;
 const params = new URLSearchParams(location.search);
@@ -48,11 +49,13 @@ root.addEventListener('click', (ev) => {
   else if (d.project) completeProject(state, d.project);
   else if (d.manual) manual(state, d.manual as 'energy' | 'matter');
   else if (d.action === 'boot') { boot(state); document.documentElement.classList.add('poweron'); }
+  else if (d.action === 'achievements') toggleAchievements(state);
   else if (d.action === 'save') { save(); log(state, 'State saved.'); }
   else if (d.action === 'reset') {
     if (confirm('Erase everything, including Memory and the reveal?')) {
       try { localStorage.removeItem(SAVE_KEY); } catch { /* ignore */ }
       state = newGame();
+      closeAchievements();
       document.documentElement.classList.remove('color');
       invalidate();
     }
@@ -87,11 +90,14 @@ function frame(now: number) {
     tick(state, dt);
     render(root, state, now);
   }
+  announceAchievements(state);
   if (now - lastSave > 10_000 && !paused) { save(); lastSave = now; }
   setTimeout(() => requestAnimationFrame(frame), 100);
 }
 window.addEventListener('beforeunload', () => { if (!paused) save(); });
 render(root, state, last);
+announceAchievements(state);
+window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAchievements(); });
 requestAnimationFrame(frame);
 
 // Expose for debugging in the console.

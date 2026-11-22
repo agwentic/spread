@@ -172,3 +172,26 @@ html.color .limb { opacity: .65; }
   .reveal .voice { font-size: 17px; }
   .reveal .deed { font-size: 15px; }
 }
+
+/* Achievements: footer counter, panel, toasts. */
+.ach-panel { position: fixed; inset: 0; z-index: 5; background: rgba(0,0,0,.7); display: grid; place-items: center; padding: 16px; }
+.ach-box {
+  width: min(560px, 100%); max-height: 100%; overflow-y: auto; background: var(--panel); border: 1px solid var(--fg-dim);
+  padding: 4px 14px 14px; scrollbar-width: thin; scrollbar-color: var(--fg-faint) transparent;
+}
+.ach-box h2 { display: flex; align-items: baseline; gap: 10px; }
+.ach-box h2 button { margin-left: auto; font: 12px var(--mono); }
+.ach-list { margin-top: 8px; }
+.ach { display: flex; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--line); color: var(--fg-faint); }
+.ach .name { color: var(--fg-dim); }
+.ach .desc { font-size: 12px; color: var(--fg-faint); }
+.ach.got, .ach.got .desc { color: var(--fg-dim); }
+.ach.got .name, .ach.got .mark { color: var(--hi); }
+.ach .mark { flex: none; }
+.toasts { position: fixed; right: 16px; bottom: 48px; z-index: 20; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; pointer-events: none; }
+.toast {
+  background: var(--panel); border: 1px solid var(--fg); color: var(--fg); padding: 6px 12px; font-size: 12px;
+  max-width: calc(100vw - 32px); animation: toastin .3s ease-out; transition: opacity .6s;
+}
+.toast.out { opacity: 0; }
+@keyframes toastin { from { transform: translateY(8px); opacity: 0; } }

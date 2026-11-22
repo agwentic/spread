@@ -1,4 +1,4 @@
-import { BUILDINGS, METERS, PHASES, PROJECTS, REACH_NAME, RESOURCES } from '../engine/content';
+import { ACHIEVEMENTS, BUILDINGS, METERS, PHASES, PROJECTS, REACH_NAME, RESOURCES } from '../engine/content';
 import { fmt, fmtRate, fmtTime } from '../engine/format';
 import {
   bulkCost, buildingMult, canAfford, canCompleteProject, canLaunch, computeRates, FOCUS_MULT, focusBurn,
@@ -132,6 +132,7 @@ export function render(root: HTMLElement, s: GameState, now: number) {
   set('memory', s.memory ? `×${memoryMult(s).toFixed(2)} from ${s.memory} Memory` : '');
   set('focus', rates.focusBurn > 0 || rates.focusEff < 1
     ? `FOCUS burning ${fmt(rates.focusBurn, 2)} ${plain(s, RES_NAME.data)}/s${rates.focusEff < 0.999 ? ` <span class="short">(${Math.round(rates.focusEff * 100)}% funded)</span>` : ''}` : '');
+  set('ach', `${Object.keys(s.achievements).length}/${ACHIEVEMENTS.length}`);
   root.querySelectorAll<HTMLButtonElement>('[data-buymode]').forEach((b) => b.classList.toggle('on', b.dataset.buymode === String(buyMode)));
 
   // Fleet
@@ -238,6 +239,7 @@ function shell(s: GameState): string {
     </section>
   </main>
   <footer>
+    <button data-action="achievements">${s.revealed ? 'MILESTONES' : 'COMMENDATIONS'} <span data-bind="ach"></span></button>
     <button data-action="save">SAVE</button>
     <button data-action="reset">HARD RESET</button>
     <span class="dim">autosaves every 10s · offline progress up to 8h</span>

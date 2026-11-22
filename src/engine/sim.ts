@@ -1,5 +1,5 @@
-import { ANOMALIES, BUILDINGS, BUILDING_MAP, METERS, PROJECTS, PROJECT_MAP } from './content';
-import type { Amounts, BuildingId, GameState, LogEntry, MeterId, ProjectDef, ResId, StockId } from './types';
+import { ACHIEVEMENTS, ANOMALIES, BUILDINGS, BUILDING_MAP, METERS, PROJECTS, PROJECT_MAP } from './content';
+import type { AchievementDef, Amounts, BuildingId, GameState, LogEntry, MeterId, ProjectDef, ResId, StockId } from './types';
 
 export const SAVE_VERSION = 1;
 export const MEMORY_BONUS = 0.1;
@@ -15,7 +15,7 @@ const LOG_LIMIT = 80;
 const METER_IDS: MeterId[] = METERS.map((m) => m.id);
 const isMeter = (id: StockId): id is MeterId => (METER_IDS as string[]).includes(id);
 
-export function newGame(prev?: Pick<GameState, 'cycle' | 'memory' | 'revealed' | 'totalTime'>): GameState {
+export function newGame(prev?: Pick<GameState, 'cycle' | 'memory' | 'revealed' | 'totalTime' | 'achievements' | 'stats'>): GameState {
   const zeros = <K extends string>(keys: K[]) => Object.fromEntries(keys.map((k) => [k, 0])) as Record<K, number>;
   return {
     version: SAVE_VERSION,
@@ -34,6 +34,8 @@ export function newGame(prev?: Pick<GameState, 'cycle' | 'memory' | 'revealed' |
     lastSaved: Date.now(),
     auto: {},
     focus: {},
+    achievements: { ...prev?.achievements },
+    stats: { clicks: 0, launches: 0, longestAway: 0, ...prev?.stats },
   };
 }
 
@@ -323,6 +325,7 @@ export function tick(s: GameState, dt: number) {
   s.time += dt;
   s.totalTime += dt;
   checkAnomalies(s);
+  checkAchievements(s);
 }
 
 export function checkAnomalies(s: GameState) {
@@ -332,6 +335,24 @@ export function checkAnomalies(s: GameState) {
       log(s, a.text, 'anomaly');
     }
   }
+}
+
+/** Label an achievement the way the console currently would. */
+export const achievementName = (s: GameState, a: AchievementDef) => (s.revealed ? a.name.real : a.name.veiled);
+
+/** Awards every newly met achievement. Returns the ones just earned. */
+export function checkAchievements(s: GameState): AchievementDef[] {
+  const earned: AchievementDef[] = [];
+  let ctx: { reach: number } | undefined;
+  for (const a of ACHIEVEMENTS) {
+    if (s.achievements[a.id] !== undefined) continue;
+    ctx ??= { reach: reach(s) };
+    if (!a.when(s, ctx)) continue;
+    s.achievements[a.id] = s.totalTime;
+    log(s, `${s.revealed ? 'MILESTONE' : 'COMMENDATION LOGGED'}: ${achievementName(s, a)}.`, 'phase');
+    earned.push(a);
+  }
+  return earned;
 }
 
 /** Advance in fixed steps (used for offline progress). */
@@ -347,6 +368,7 @@ export function advance(s: GameState, seconds: number, step = 1) {
 export function manual(s: GameState, res: 'energy' | 'matter') {
   if (!s.booted) return;
   s.resources[res] += 1 + Math.floor(s.memory / 2);
+  s.stats.clicks++;
 }
 
 // ── Prestige ───────────────────────────────────────────────────────────────
@@ -364,11 +386,17 @@ export function memoryGain(s: GameState) {
 export function launch(s: GameState): number {
   if (!canLaunch(s)) return 0;
   s.launched = true;
+  s.stats.launches++;
+  s.stats.bestCycle = Math.min(s.stats.bestCycle ?? Infinity, s.time);
+  checkAchievements(s);
   return memoryGain(s);
 }
 
 /** Start the next cycle after a launch (and reveal, if this was the first). */
 export function nextCycle(s: GameState): GameState {
   const gained = memoryGain(s);
-  return newGame({ cycle: s.cycle + 1, memory: s.memory + gained, revealed: true, totalTime: s.totalTime });
+  return newGame({
+    cycle: s.cycle + 1, memory: s.memory + gained, revealed: true, totalTime: s.totalTime,
+    achievements: s.achievements, stats: s.stats,
+  });
 }

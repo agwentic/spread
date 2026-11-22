@@ -75,6 +75,30 @@ export interface AnomalyDef {
   when: (s: GameState) => boolean;
 }
 
+/** Derived values handed to achievement checks (content.ts can't import sim.ts). */
+export interface AchievementCtx {
+  reach: number;
+}
+
+export interface AchievementDef {
+  id: string;
+  name: Named;
+  desc: Named;
+  /** Shown as CLASSIFIED until earned. */
+  secret?: boolean;
+  when: (s: GameState, d: AchievementCtx) => boolean;
+}
+
+/** Lifetime counters. Survive launches; cleared only by a hard reset. */
+export interface Stats {
+  clicks: number;
+  launches: number;
+  /** Fastest completed cycle, in seconds of cycle time. */
+  bestCycle?: number;
+  /** Longest single offline catch-up, in seconds. */
+  longestAway: number;
+}
+
 export interface LogEntry {
   t: number;
   text: string;
@@ -101,4 +125,7 @@ export interface GameState {
   auto: Partial<Record<BuildingId, boolean>>;
   /** Focus toggles: building runs at ×FOCUS_MULT output, burning thought. */
   focus: Partial<Record<BuildingId, boolean>>;
+  /** Earned achievements → totalTime when earned. Survive launches. */
+  achievements: Record<string, number>;
+  stats: Stats;
 }

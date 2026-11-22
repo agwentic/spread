@@ -1,4 +1,4 @@
-import { advance, newGame, SAVE_VERSION } from './sim';
+import { advance, checkAchievements, newGame, SAVE_VERSION } from './sim';
 import type { GameState } from './types';
 
 export const SAVE_KEY = 'spread.save.v1';
@@ -21,6 +21,9 @@ export function deserialize(raw: string): GameState | null {
       buildings: { ...base.buildings, ...data.buildings },
       auto: { ...data.auto },
       focus: { ...data.focus },
+      achievements: { ...data.achievements },
+      // Saves from before achievements: infer launches from the cycle number.
+      stats: { ...base.stats, launches: (data.cycle ?? 1) - 1 + (data.launched ? 1 : 0), ...data.stats },
     } as GameState;
   } catch {
     return null;
@@ -33,5 +36,7 @@ export function applyOffline(s: GameState, now = Date.now()): number {
   const away = Math.min(OFFLINE_CAP_SECONDS, Math.max(0, (now - s.lastSaved) / 1000));
   if (away < 5) return 0;
   advance(s, away, away > 600 ? 5 : 1);
+  s.stats.longestAway = Math.max(s.stats.longestAway, away);
+  checkAchievements(s);
   return away;
 }

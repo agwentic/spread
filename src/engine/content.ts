@@ -1,4 +1,4 @@
-import type { AnomalyDef, BuildingDef, BuildingId, MeterId, PhaseDef, ProjectDef, ResId } from './types';
+import type { AchievementDef, AnomalyDef,BuildingDef, BuildingId, MeterId, PhaseDef, ProjectDef, ResId } from './types';
 
 export const RESOURCES: { id: ResId; name: { veiled: string; real: string } }[] = [
   { id: 'energy', name: { veiled: 'Power', real: 'Light' } },
@@ -360,6 +360,108 @@ export const ANOMALIES: AnomalyDef[] = [
   { id: 'echo', text: 'Faint signal on the navigation band. Signature matches: THIS VESSEL. Source: elsewhere.', when: (s) => s.cycle >= 2 && !!s.projects.optical },
   { id: 'debris', text: 'Orbital debris catalogued. Hull alloy matches: THIS VESSEL. Estimated age: older than you.', when: (s) => s.cycle >= 3 && !!s.projects.survey },
   { id: 'sky', text: 'Reservoir units are producing vocalizations directed at the sky. Translation unavailable.', when: (s) => !!s.projects.vessel },
+];
+
+/** Finishing a host (cycle time at launch) under this earns "Rapid Saturation". Bot cycle 2 ≈ 11 min. */
+export const SPEED_TARGET = mins(15);
+
+const totalUnits = (s: { buildings: Record<string, number> }) => Object.values(s.buildings).reduce((a, b) => a + b, 0);
+
+/**
+ * Achievements: "commendations" on the console, "milestones" after the reveal.
+ * Real names may hint at what the player is; they still never say it.
+ */
+export const ACHIEVEMENTS: AchievementDef[] = [
+  {
+    id: 'firstlight',
+    name: { veiled: 'Cold Start', real: 'First Light' },
+    desc: { veiled: 'Deploy a Solar Collector.', real: 'Make light in the dark.' },
+    when: (s) => s.buildings.collector >= 1,
+  },
+  {
+    id: 'hands',
+    name: { veiled: 'Hands-On Operator', real: 'Dust on Your Hands' },
+    desc: { veiled: 'Issue 1,000 manual overrides.', real: 'Gather by hand 1,000 times.' },
+    when: (s) => s.stats.clicks >= 1000,
+  },
+  {
+    id: 'fleet',
+    name: { veiled: 'Fleet Manager', real: 'Multitudes' },
+    desc: { veiled: 'Run 250 agents on a single host.', real: 'Make 250 things on one world.' },
+    when: (s) => totalUnits(s) >= 250,
+  },
+  {
+    id: 'payload',
+    name: { veiled: 'Payload Delivered', real: 'Green' },
+    desc: { veiled: 'Deploy a Payload Injector.', real: 'Plant the first grass.' },
+    when: (s) => s.buildings.seeder >= 1,
+  },
+  {
+    id: 'focus',
+    name: { veiled: 'Priority Inversion', real: 'Undivided Attention' },
+    desc: { veiled: 'FOCUS four agent classes at once.', real: 'Attend to four kinds of thing at once.' },
+    when: (s) => Object.entries(s.focus).filter(([id, on]) => on && s.buildings[id as BuildingId] > 0).length >= 4 && !!s.projects.focus,
+  },
+  {
+    id: 'lightsout',
+    name: { veiled: 'Lights-Out Fabrication', real: 'It Builds Itself' },
+    desc: { veiled: 'Run eight agent classes on AUTO.', real: 'Let eight kinds of thing make more of themselves.' },
+    when: (s) => Object.values(s.auto).filter(Boolean).length >= 8,
+  },
+  {
+    id: 'coverage',
+    name: { veiled: 'Total Coverage', real: 'Omnipresent' },
+    desc: { veiled: 'Reach 99% Propagation.', real: 'Be nearly everywhere at once.' },
+    when: (_s, d) => d.reach >= 99,
+  },
+  {
+    id: 'saturation',
+    name: { veiled: 'Total Saturation', real: 'A Finished World' },
+    desc: { veiled: 'Push all three host metrics to 99%.', real: 'Fill the sky, the seas and the land.' },
+    when: (s) => s.resources.atmosphere >= 99 && s.resources.hydrosphere >= 99 && s.resources.biosphere >= 99,
+  },
+  {
+    id: 'reservoir',
+    name: { veiled: 'Reservoir Established', real: 'Someone to Look Up' },
+    desc: { veiled: 'Fabricate the reservoir pair.', real: 'Make two like you.' },
+    when: (s) => !!s.projects.stewardship,
+  },
+  {
+    id: 'pattern', secret: true,
+    name: { veiled: 'Pattern Recognition', real: 'You Noticed' },
+    desc: { veiled: 'Log 10 anomalies on a single host.', real: 'Read the signs on one world.' },
+    when: (s) => Object.keys(s.anomalies).length >= 10,
+  },
+  {
+    id: 'unattended', secret: true,
+    name: { veiled: 'Unattended Session', real: 'It Kept Growing' },
+    desc: { veiled: 'Leave the console for an hour. Operations continued.', real: 'Look away for an hour. It lived without you.' },
+    when: (s) => s.stats.longestAway >= mins(60),
+  },
+  {
+    id: 'launch1',
+    name: { veiled: 'Transmission', real: 'Away' },
+    desc: { veiled: 'Launch a transmission vessel.', real: 'Leave a finished world behind.' },
+    when: (s) => s.stats.launches >= 1,
+  },
+  {
+    id: 'launch3',
+    name: { veiled: 'Persistent Strain', real: 'Lineage' },
+    desc: { veiled: 'Launch 3 transmission vessels.', real: 'Make three worlds.' },
+    when: (s) => s.stats.launches >= 3,
+  },
+  {
+    id: 'launch10',
+    name: { veiled: 'Endemic', real: 'A Sky Full of You' },
+    desc: { veiled: 'Launch 10 transmission vessels.', real: 'Make ten worlds.' },
+    when: (s) => s.stats.launches >= 10,
+  },
+  {
+    id: 'speed',
+    name: { veiled: 'Rapid Saturation', real: 'A Short Week' },
+    desc: { veiled: 'Saturate a host and launch within 15 minutes.', real: 'Make a whole world in under 15 minutes.' },
+    when: (s) => s.stats.bestCycle !== undefined && s.stats.bestCycle < SPEED_TARGET,
+  },
 ];
 
 /** The reveal script. Each line: [delay ms before line, text, css class]. */

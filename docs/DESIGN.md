@@ -141,6 +141,33 @@ systems give it somewhere to go:
   cannot be focused, so focus can't pay for itself. This is the uncapped sink: it scales
   with the fleet.
 
+### Achievements (Commendations → Milestones)
+
+15 achievements, defined in `ACHIEVEMENTS` in `content.ts`. They are **Commendations** on the
+console and **Milestones** after the reveal. Each has a veiled and a real name and description, and the real names
+may hint at what the player is (*Omnipresent*, *A Sky Full of You*) without ever saying it.
+They persist across launches (a hard reset clears them), along with lifetime `stats`
+(manual clicks, launches, fastest host, longest absence). The footer button opens the list; an
+unlock shows a toast and a log line. Two are secret (CLASSIFIED until earned).
+
+| Veiled | Real | Condition |
+|---|---|---|
+| Cold Start | First Light | Deploy a collector |
+| Hands-On Operator | Dust on Your Hands | 1,000 manual clicks (lifetime) |
+| Fleet Manager | Multitudes | 250 units on one host |
+| Payload Delivered | Green | Deploy an injector |
+| Priority Inversion | Undivided Attention | FOCUS 4 classes at once |
+| Lights-Out Fabrication | It Builds Itself | AUTO on 8 classes |
+| Total Coverage | Omnipresent | Reach ≥ 99% |
+| Total Saturation | A Finished World | All three meters ≥ 99% |
+| Reservoir Established | Someone to Look Up | Complete the reservoir pair |
+| Pattern Recognition *(secret)* | You Noticed | 10 anomalies on one host |
+| Unattended Session *(secret)* | It Kept Growing | One offline catch-up of ≥ 1h |
+| Transmission | Away | Launch 1× |
+| Persistent Strain | Lineage | Launch 3× |
+| Endemic | A Sky Full of You | Launch 10× |
+| Rapid Saturation | A Short Week | Launch with cycle time < 15 min (`SPEED_TARGET`; bot cycle 2 ≈ 11 min) |
+
 ## 5. The breadcrumbs (anomaly log)
 
 Flavor lines that appear in the system log as conditions are met. They are the main way

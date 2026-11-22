@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
-  autoReserve, boot, buildingCost, bulkCost, buyBuilding, buyBuildings, completeProject, focusBurn, maxAffordable, computeRates, launch, memoryGain, newGame, nextCycle, phase, reach, tick,
+  autoReserve, boot, checkAchievements, manual, buildingCost, bulkCost, buyBuilding, buyBuildings, completeProject, focusBurn, maxAffordable, computeRates, launch, memoryGain, newGame, nextCycle, phase, reach, tick,
 } from '../src/engine/sim';
 import { applyOffline, deserialize, serialize } from '../src/engine/save';
 
@@ -134,5 +134,56 @@ describe('engine', () => {
     expect(r.net.data).toBeCloseTo(-focusBurn(s, 'collector'));
     s.buildings.core = 1; s.focus.core = true;
     expect(computeRates(s).focusBurn).toBeCloseTo(focusBurn(s, 'collector')); // cores can't be focused
+  });
+
+  test('achievements unlock once, survive launches, and track launch count and speed', () => {
+    const s = newGame(); boot(s);
+    s.resources.matter = 10;
+    buyBuilding(s, 'collector');
+    tick(s, 1);
+    expect(s.achievements.firstlight).toBeDefined();
+    expect(checkAchievements(s)).toEqual([]); // no double award
+    for (let i = 0; i < 1000; i++) manual(s, 'energy');
+    tick(s, 1);
+    expect(s.achievements.hands).toBeDefined();
+
+    s.projects.vessel = true;
+    s.time = 10 * 60; // a 10-minute host
+    launch(s);
+    expect(s.achievements.launch1).toBeDefined();
+    expect(s.achievements.speed).toBeDefined();
+    let next = nextCycle(s);
+    expect(next.achievements.firstlight).toBeDefined();
+    expect(next.stats.launches).toBe(1);
+    for (let i = 0; i < 2; i++) {
+      boot(next); next.projects.vessel = true; next.time = 3600;
+      launch(next); next = nextCycle(next);
+    }
+    expect(next.stats.launches).toBe(3);
+    expect(next.stats.bestCycle).toBe(600);
+    expect(next.achievements.launch3).toBeDefined();
+    expect(next.achievements.launch10).toBeUndefined();
+  });
+
+  test('slow hosts do not earn the speed achievement; long absences earn unattended', () => {
+    const s = newGame(); boot(s);
+    s.projects.vessel = true; s.time = 40 * 60;
+    launch(s);
+    expect(s.achievements.speed).toBeUndefined();
+    const t = newGame(); boot(t);
+    t.lastSaved = Date.now() - 2 * 3600_000;
+    applyOffline(t);
+    expect(t.achievements.unattended).toBeDefined();
+  });
+
+  test('old saves without achievements load, inferring launches from the cycle', () => {
+    const s = newGame(); boot(s);
+    const raw = JSON.parse(serialize(s));
+    delete raw.achievements; delete raw.stats; raw.cycle = 4;
+    const loaded = deserialize(JSON.stringify(raw))!;
+    expect(loaded.achievements).toEqual({});
+    expect(loaded.stats.launches).toBe(3);
+    tick(loaded, 1);
+    expect(loaded.achievements.launch3).toBeDefined();
   });
 });

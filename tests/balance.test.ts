@@ -8,7 +8,8 @@ test('a greedy bot can finish cycle 1 in a reasonable time, and cycle 2 faster',
   const report = (label: string, r: ReturnType<typeof playCycle>) =>
     console.log(label, r.finished ? 'finished' : 'DID NOT FINISH', fmtTime(r.state.time),
       Object.entries(r.phaseTimes).map(([p, t]) => `P${p}@${fmtTime(t)}`).join(' '),
-      JSON.stringify(r.state.buildings), 'meters', Math.round(r.state.resources.atmosphere), Math.round(r.state.resources.hydrosphere), Math.round(r.state.resources.biosphere));
+      JSON.stringify(r.state.buildings), 'meters', Math.round(r.state.resources.atmosphere), Math.round(r.state.resources.hydrosphere), Math.round(r.state.resources.biosphere),
+      'achievements', Object.keys(r.state.achievements).join(','));
   report('cycle 1:', one);
   expect(one.finished).toBe(true);
   expect(one.state.time).toBeGreaterThan(20 * 60);
