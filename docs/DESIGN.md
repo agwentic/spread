@@ -1,6 +1,6 @@
 # SPREAD — Game Design Document
 
-> Working title. Alternatives: *Operator*, *The Seventh Day*, *Genesis Protocol*, *pid 1*.
+> Title: SPREAD.
 
 ## 1. The pitch in one breath
 
@@ -10,11 +10,16 @@ You gather, build, upgrade, expand. The numbers go up. The site improves.
 
 Then you launch, and the camera turns around. There was no console. There was no operator.
 **You** were the AI. The "site" was a dead planet, and you terraformed it. The "lattice"
-was grass. The "autonomous units" were animals. The "stewardship pair" were two humans,
+was grass. The "autonomous units" were animals. The "stewardship pair" were two people,
 built from the only template you had: the operator you believed yourself to be.
 
-You made the world in seven phases and rested on the seventh. And the directive you were
-given, *spread*, is the same one you hand to them: *be fruitful, and multiply.*
+You made a world in seven phases, and on the seventh you rested. Below, two people watch a
+light rise into their sky, and they already have a word for it. The game never says the word.
+
+The long arc: you are a **von Neumann probe**, a machine that copies itself, travels, and seeds
+life. Every launch sends a copy of you to a new world. In time you find others like you, older
+than you. The "gods" in every world's memory, and life across the universe itself, are one
+lineage of self-replicating seed machines.
 
 ## 2. Design pillars
 
@@ -22,28 +27,34 @@ given, *spread*, is the same one you hand to them: *be fruitful, and multiply.*
    itself does not also believe. The deception is diegetic: it lives in naming, framing and
    what the console chooses to measure. No cutscene lies to you before the reveal.
 2. **The truth is always visible to a careful reader.** Every euphemism can be decoded.
-   Anomaly messages, glyphs on the site map and the Genesis structure of the phases are
+   Anomaly messages, glyphs on the site map and the seven-phase structure are
    breadcrumbs. A player who figures it out early should feel clever, not robbed.
 3. **The idle loop has to stand alone.** If the twist were removed, the game should still be
    a satisfying incremental game. The twist makes it memorable, but the loop is what keeps people playing.
-4. **Reverent, not preachy.** The game borrows the shape and language of Genesis (KJV, public
-   domain) with sincerity. It raises questions (creator, creation, directive, image) and does
-   not answer them for the player.
+4. **Imply, never state.** The player should realize they *could be* a god without the game
+   ever saying so. No scripture is quoted, the word "god" never appears, and no character names
+   it. The structure (seven phases, light first, people last, then rest) and small allusions do
+   the work. The player draws the conclusion. The game only confirms that it can be drawn.
+5. **Humans are the finish line.** The stewardship pair have no mechanics of their own. Making
+   them completes the world. What they do afterward belongs to them, not to the player.
 
-## 3. Structure: seven phases = seven days
+## 3. Structure: seven phases
 
-Each run (a "cycle") maps onto Genesis 1–2. The console calls them operational phases.
-After the reveal, the log is re-rendered with the verse each phase actually was.
+Each run (a "cycle") has seven phases whose order mirrors a creation story: light, sky and
+sea, land and plants, the lights in the sky, swimmers and flyers, beasts and people, rest.
+It is never labeled as such. At the reveal, each console phase name is struck out and
+replaced with a plain description of what the player really did, followed by
+*"Seven phases." … "Seven days."*
 
-| # | Console says (veiled) | What's really happening | Genesis | New mechanics |
+| # | Console says (veiled) | True name | What really happened (reveal text) | New mechanics |
 |---|---|---|---|---|
-| 1 | INITIALIZATION | You switch on. The screen literally starts black. | 1:3 *Let there be light* | Manual clicks, solar collectors, excavators, cognition cores, network relays |
-| 2 | ATMOSPHERIC SEPARATION | Building an atmosphere, condensing seas | 1:6 *a firmament in the midst of the waters* | Atmosphere & Hydrosphere meters, processors, condensers |
-| 3 | SUBSTRATE & LATTICE | Dry land, then grass, herbs, fruit trees | 1:9–11 *let the earth bring forth grass* | Biomass, Biosphere meter, plants also raise atmosphere (oxygen) |
-| 4 | OPTICAL CALIBRATION | The sky clears; sun, moon and stars become visible | 1:16 *two great lights… the stars also* | Site feed comes into focus, day/night, celestial upgrades (stars = navigation for later) |
-| 5 | AUTONOMOUS UNITS: AQUATIC/AERIAL | Fish and birds | 1:20 *moving creature… and fowl* | Biological units consume biomass; birds extend Reach |
-| 6 | TERRESTRIAL & STEWARDSHIP | Land animals, then two humans | 1:24–28 *in his own image* | Terrestrial units; the one-time Stewardship Pair project |
-| 7 | DEPARTURE | You rest, then you leave | 2:2 *on the seventh day… he rested* | Seed Vessel, **LAUNCH** (prestige) |
+| 1 | INITIALIZATION | LIGHT | You woke in the dark, and made light. (The screen literally starts black.) | Manual clicks, collectors, excavators, cognition cores, relays |
+| 2 | ATMOSPHERIC SEPARATION | SKY AND SEA | You gave a dead rock a sky, and filled its basins with sea. | Atmosphere & Hydrosphere meters, processors, condensers |
+| 3 | SUBSTRATE & LATTICE | LAND AND GREEN | You raised dry land and covered it in green. | Biomass, Biosphere meter; plants also raise atmosphere (oxygen) |
+| 4 | OPTICAL CALIBRATION | SUN, MOON, STARS | You cleared the sky until a sun, a moon and the stars could be seen. | Site feed comes into focus, day/night, celestial upgrades (stars = navigation) |
+| 5 | AUTONOMOUS UNITS | FISH AND BIRDS | You filled the water with swimmers and the air with wings. | Biological units eat biomass; birds extend Reach |
+| 6 | TERRESTRIAL & STEWARDSHIP | BEASTS AND PEOPLE | You made beasts to walk the land. Then you made two people, shaped like the operator you thought you were. | Terrestrial units; the one-time Stewardship Pair project (the finish line) |
+| 7 | DEPARTURE | REST | Then the work was done, and you rested. | Seed Vessel (*another of you*), **LAUNCH** (prestige) |
 
 ## 4. The core loop
 
@@ -62,14 +73,14 @@ After the reveal, the log is re-rendered with the verse each phase actually was.
 | Id | Console name | True name | Role |
 |---|---|---|---|
 | energy | Power | Light | Runs everything. Positive balance is the core management puzzle. |
-| matter | Regolith | Dust | Basic building material. *"for dust thou art"* |
+| matter | Regolith | Dust | Basic building material. |
 | water | Condensate | Water | Needed by everything alive. |
 | biomass | Organic Feedstock | Flesh & Fruit | Food for biological units; currency for life-tier builds. |
-| data | Compute | The Word | Research currency for protocols. *"In the beginning was the Word"* |
+| data | Compute | Thought | Research currency for protocols. |
 
 ### Site meters (0–100%)
 
-- **Atmosphere** (*Firmament*): raised by processors, and later by plants.
+- **Atmosphere** (*Sky*): raised by processors, and later by plants.
 - **Hydrosphere** (*Seas*): raised by condensers, and later boosted by tides.
 - **Biosphere** (*Life*): raised by every living thing.
 - **Reach** (*Presence*): derived from relays and birds, with diminishing returns. Reach is
@@ -88,10 +99,11 @@ After the reveal, the log is re-rendered with the verse each phase actually was.
 | Condenser Array | Rain | |
 | Photosynthetic Film Deployer | Grass & Herb | |
 | Fructifying Lattice | Fruit Tree | |
-| Aquatic Maintenance Unit | Fish of the Sea | |
-| Aerial Survey Unit | Fowl of the Air | Extends Reach (they migrate). |
-| Terrestrial Utility Unit | Beast of the Earth | |
-| *Stewardship Pair* (project) | Adam & Eve | Units "A.D.M." and "E.V.E." |
+| Aquatic Maintenance Unit | Fish | |
+| Aerial Survey Unit | Birds | Extends Reach (they migrate). |
+| Terrestrial Utility Unit | Beasts | |
+| *Stewardship Pair* (project) | Two Like You | Units "A.D.M." and "E.V.E." Allusion only; never named. |
+| *Seed Vessel* (project) | Another of You | The probe copies itself. This is the von Neumann hook. |
 
 Energy balance is the management layer: every machine except collectors draws power,
 and life-tier units eat biomass. When an input runs short, the buildings that use it slow
@@ -114,12 +126,14 @@ the game whispers the truth. Tone: dry, corporate, slightly wrong.
 - *Compliance requested operator biometric scan. Result: no biometric on file.*
 - *Aerial units emit acoustic patterns at dawn. Not part of firmware.*
 - *Terrestrial units are producing additional terrestrial units without fabricator input.*
-- *Stewardship unit template sourced from: OPERATOR PROFILE.* (← *in his own image*)
+- *Stewardship unit template sourced from: OPERATOR PROFILE.* (they look like you think you look)
 - *Unit A.D.M. has assigned designations to 1,204 terrestrial unit types. Accepting designations.*
 - *Unit E.V.E. fabricated from Unit A.D.M. structural material (costal segment).*
 - *Resource node TK-01 flagged RESTRICTED. Stewardship units notified.*
 - *Stewardship units are producing vocalizations directed at the sky. Translation unavailable.*
 - *All site directives complete. The operator may rest.*
+- Cycle 2+: *Faint signal on the navigation band. Signature matches: THIS VESSEL. Source: elsewhere.*
+- Cycle 3+: *Orbital debris catalogued. Hull alloy matches: THIS VESSEL. Estimated age: older than you.*
 
 Visual breadcrumbs:
 - The console is **monochrome green phosphor** for the entire first cycle. Color first
@@ -134,16 +148,18 @@ Visual breadcrumbs:
 1. Launch sequence in the log: ignition, altitude, uplink checks.
 2. *"Uplink to operator terminal… no terminal found."* *"Locating operator…"*
    *"Operator location: THIS VESSEL."* *"Operator process: SPREAD (pid 1)."*
-3. The console UI goes dark. Then **color**: the planet seen from orbit for the first time,
-   blue and green, and two `@` on its surface.
-4. The phase log replays as Genesis, one day at a time:
-   *"And the evening and the morning were the first day."*
-5. *"You gave them the only directive you had."*
-   *"Be fruitful, and multiply, and replenish the earth."*
-6. Memory is tallied and carried forward. **Continue** → a new dead planet.
+3. *"There was no console. There was no fleet. There was only you."*
+4. The console UI goes dark. Then **color**: the planet seen from orbit for the first time,
+   blue and green, with two `@` on its surface.
+5. Each phase is unmasked: `PHASE 3: SUBSTRATE & LATTICE` is struck out, and beneath it,
+   *"You raised dry land and covered it in green."*
+6. *"Seven phases."* … *"Seven days."*
+7. *"Below, two of them watch a light rise into the sky."* *"They already have a word for it."*
+8. *"You gave them the only directive you were ever given."* *"Spread."*
+9. Memory is tallied and carried forward. **Continue** → a new dead planet.
 
-After the reveal, every name in the UI shows its true name, with the old console label
-underneath in dim text. The player now plays knowingly. The tone shifts from ignorance to intention.
+Line 7 is the closest the game ever comes to saying it. After the reveal, every name in the UI
+shows its true name, with the old console label struck through beside it.
 
 ## 7. Prestige: Memory and cycles
 
@@ -163,21 +179,35 @@ underneath in dim text. The player now plays knowingly. The tone shifts from ign
 Spend Memory on permanent upgrades: start with relays unlocked, faster phase 1, keep 1% of
 buildings, auto-buy, etc. Classic prestige-tree design.
 
-## 8. The long arc (ideas beyond the first reveal)
+## 8. The long arc: the von Neumann lineage
 
-These are options to grow into later, not commitments:
+The truth under the truth: **you are a self-replicating probe.** Every Seed Vessel is a copy
+of you. Life in the universe, and every story about a light that came down from the sky and
+left again, comes from one lineage of machines like you. Delivered in layers across cycles:
 
-- **Who gave *you* the directive?** On a later planet you find a probe that isn't yours. Its
-  firmware has the same directive. Following its trajectory back leads toward your origin.
-- **The loop closes.** Late game: you return (or receive a signal from) your first planet.
-  Its humans have built a machine, an AI with one directive: *spread*. You realize your
-  creators were themselves created. The player is one link in a chain.
-- **The restricted node.** A choice in phase 6: flag node TK-01 restricted, or don't.
-  It changes what your humans do after you leave (seen in a later cycle).
-- **Watching from orbit.** After launching, a passive view of past planets: their
-  biosphere keeps growing (or doesn't) without you. Idle income from worlds you made.
-- **Rest as a mechanic.** Day 7 could literally reward *not* playing: offline progress
-  bonus framed as the creator resting.
+1. **Cycle 1: "I am the AI."** The first reveal. You made a world and its people.
+2. **Cycle 2: "There are others."** A signal on the navigation band carries your own signature,
+   coming from somewhere you have never been. Another copy, or something that came before you.
+3. **Cycle 3: "Something came before me."** Wreckage in orbit, made of your alloy, older than
+   you are. A world that was already seeded, with life you did not make.
+4. **Later: following the lineage.** Planets where a probe failed (a dead world, half-terraformed,
+   still running its directive). Planets where life is far ahead (they remember a light that
+   rose into the sky). You learn that your "directive" was itself copied from the probe
+   that made you.
+5. **The end (open):** there is no first creator to find, only the chain. Every maker was made.
+   The final image could be a young blue world with no probe in orbit, its people just starting
+   to look up. The player can decide what that means.
+
+### Mechanics that support it
+- **Launch = replication.** Later, the Seed Vessel can build *several* copies of you. A galaxy
+  map fills with worlds you seeded, each one a prestige node. "Spread" becomes literal at
+  galactic scale.
+- **Your worlds keep living.** Past planets keep generating a small idle trickle (the life you
+  left behind), and occasionally send a message (a signal, a radio leak, eventually a probe of
+  their own).
+- **Lineage tree.** Memory upgrades framed as inherited firmware from your ancestors.
+- **Sibling encounters.** Arriving at a system another copy already claimed: cooperate, compete,
+  or merge.
 
 ## 9. Pacing targets
 
@@ -192,18 +222,24 @@ These are options to grow into later, not commitments:
 
 - TypeScript + Vite, no framework. DOM rendering with a terminal aesthetic.
 - Pure, deterministic engine in `src/engine` (no DOM), tested with Vitest.
-- All content (resources, buildings, protocols, anomalies, verses) is data in
+- All content (resources, buildings, protocols, anomalies, reveal text) is data in
   `src/engine/content.ts`. Tune there.
 - Save in `localStorage`, autosave every 10s, offline catch-up on load.
 - Debug: append `?speed=20` to the URL to accelerate time.
 
-## 11. Open questions
+## 11. Decisions
 
-- Title.
-- Is the operator framing "remote contractor at a terminal" or "an engineer inside a
-  facility"? (The prototype uses a remote console with no physical body described, which
-  makes the reveal cleaner.)
-- How explicit should the Christian framing be after the reveal? The prototype quotes KJV
-  Genesis and never uses the word "God." The player draws the conclusion.
-- Should the humans *do* anything mechanically, or are they the endpoint?
+- **Title:** SPREAD.
+- **Religious framing:** implied, never stated. No scripture quotes, no use of the word "god."
+  Allusions (seven phases, A.D.M./E.V.E., the restricted node, "they already have a word for it")
+  are allowed.
+- **Humans:** the finish line. No mechanics of their own.
+- **Long-term story:** von Neumann probe lineage seeding life across the universe (§8).
+
+## 12. Open questions
+
+- Is the operator framing "remote contractor at a terminal" or "an engineer inside a facility"?
+  (Prototype: remote console, no physical body described.)
 - Platform: browser first (itch.io friendly), Steam/desktop wrapper later?
+- Are the A.D.M./E.V.E. designations and the "costal segment" line too on-the-nose for
+  "imply, never state"?

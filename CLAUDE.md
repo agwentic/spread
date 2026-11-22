@@ -1,7 +1,7 @@
 # SPREAD (unnamed-game-idea)
 
 Browser idle/incremental game. The player thinks they're an operator managing an AI fleet;
-they are actually the AI, terraforming a planet across 7 phases that mirror Genesis 1–2.
+they are actually a self-replicating probe (the AI) seeding life on a planet across 7 phases that echo a creation story. Imply godhood, never state it: no scripture, never the word "god". Humans are the finish line.
 The first launch (prestige) reveals the truth. Full design: `docs/DESIGN.md` (keep it current
 when mechanics change).
 

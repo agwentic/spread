@@ -122,8 +122,8 @@ html.color .limb { opacity: .65; }
 .reveal .sys { color: #6dff8f; }
 .reveal .warn { color: #ffb347; }
 .reveal .voice { color: #fff; font-size: 20px; margin-top: 14px; }
-.reveal .verse { color: #f5e6c4; font-style: italic; font-size: 18px; margin-top: 18px; }
-.reveal .day { color: #8b95a3; font-size: 14px; }
+.reveal .struck { color: #5d6b5f; font-size: 13px; text-decoration: line-through; margin-top: 18px; letter-spacing: .08em; }
+.reveal .deed { color: #f5e6c4; font-size: 18px; }
 .reveal .big { color: #fff; font: 40px var(--term); letter-spacing: .3em; }
 .reveal.dawn { background: radial-gradient(ellipse at center, #0b1530 0%, #000 70%); color: #d9e4ef; }
 .reveal .planet { font: 12px/1 var(--mono); margin: 0 0 24px; white-space: pre; }

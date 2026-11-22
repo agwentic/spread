@@ -9,7 +9,7 @@ directive: **spread**. Gather, build, upgrade, expand.
 
 ```sh
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5173 (also exposed on your LAN)
 ```
 
 Add `?speed=20` to the URL to accelerate time while testing. `window.game()` in the

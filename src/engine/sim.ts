@@ -36,7 +36,7 @@ export function boot(s: GameState) {
   if (s.booted) return;
   s.booted = true;
   log(s, s.cycle === 1 ? 'TERRA-OPS remote fleet console online.' : `Site ${String(s.cycle).padStart(3, '0')}. Vessel landed.`);
-  log(s, s.cycle === 1 ? 'Operator authenticated. Welcome back, Operator.' : 'You know what you are now.');
+  log(s, s.cycle === 1 ? 'Operator authenticated. Welcome back, Operator.' : 'You know what you are now. You think.');
   log(s, 'PRIMARY DIRECTIVE: SPREAD.', 'phase');
 }
 

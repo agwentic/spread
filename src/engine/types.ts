@@ -61,8 +61,8 @@ export interface ProjectDef {
 
 export interface PhaseDef {
   name: Named;
-  verse: string;
-  day: string;
+  /** Plain description of what the player really did, shown at the reveal. */
+  deed: string;
 }
 
 export interface AnomalyDef {

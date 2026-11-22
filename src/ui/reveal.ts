@@ -1,9 +1,7 @@
-import { PHASES, REVEAL_CODA, REVEAL_SCRIPT } from '../engine/content';
+import { PHASES, RELAUNCH_LINES, REVEAL_CODA, REVEAL_SCRIPT } from '../engine/content';
 import { memoryGain, MEMORY_BONUS } from '../engine/sim';
 import type { GameState } from '../engine/types';
 import { renderPlanet } from './sitemap';
-
-const ORDINAL = ['', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh'];
 
 /** Plays the launch sequence. The full reveal on the first launch; a short one after. */
 export function playReveal(s: GameState, onDone: () => void) {
@@ -46,17 +44,19 @@ export function playReveal(s: GameState, onDone: () => void) {
       overlay.classList.add('dawn');
       startPlanet();
       await wait(4000);
-      for (let day = 1; day <= 7; day++) {
-        await wait(day === 1 ? 500 : 2600);
-        line(after, PHASES[day].verse, 'verse');
-        if (day < 7) { await wait(1800); line(after, `And the evening and the morning were the ${ORDINAL[day]} day.`, 'day'); }
+      // Each console phase is unmasked: the label is struck out, the truth written beneath.
+      for (let n = 1; n <= 7; n++) {
+        await wait(n === 1 ? 500 : 2600);
+        line(after, `PHASE ${n}: ${PHASES[n].name.veiled}`, 'struck');
+        await wait(1400);
+        line(after, PHASES[n].deed, 'deed');
       }
       for (const [d, t, c] of REVEAL_CODA) { await wait(d); line(after, t, c); }
     } else {
       line(text, 'Seed vessel away.', 'sys');
       startPlanet();
       await wait(1500);
-      line(after, 'Behind you, they look up.', 'voice');
+      for (const t of RELAUNCH_LINES) { line(after, t, 'voice'); await wait(1800); }
     }
     const gain = memoryGain(s);
     await wait(2000);
