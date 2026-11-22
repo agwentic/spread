@@ -54,6 +54,11 @@ header {
 }
 header .mini { display: none; }
 .tabs { display: none; }
+/* Pin rows explicitly: the tab bar is display:none on desktop and must not shift the grid. */
+header { grid-row: 1; }
+.tabs { grid-row: 2; }
+main { grid-row: 3; }
+footer { grid-row: 4; }
 header .title { font: 22px var(--term); color: var(--hi); letter-spacing: .08em; margin-right: auto; }
 main {
   display: grid; grid-template-columns: minmax(200px, 250px) minmax(0, 1fr) minmax(0, 1.1fr);
