@@ -12,7 +12,8 @@ TypeScript + Vite, no UI framework. Vitest for tests. Node 22.
 - Dev server: `npm run dev` (add `?speed=20` to the URL to accelerate time)
 - Test: `npm test` (includes `tests/balance.test.ts`, a greedy bot that plays full cycles and prints phase timings)
 - Typecheck: `npm run typecheck`
-- Build: `npm run build` → `dist/`
+- Build: `npm run build` → `dist/` (relative base, works under any path)
+- Deploy: `npm run deploy` (tests, builds, force-pushes `dist/` to the `gh-pages` branch) → https://agwentic.github.io/spread/
 
 ## Layout
 - `src/engine/` — pure game logic, no DOM. `content.ts` holds ALL tunable data (resources,

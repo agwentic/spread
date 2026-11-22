@@ -1,7 +1,9 @@
 # SPREAD
 
-An idle/incremental game. You are an operator at a remote fleet console with one
-directive: **spread**. Gather, build, upgrade, expand.
+An idle/incremental game. You are an operator at a remote propagation console with one
+directive: **spread**. Establish a foothold. Inject the payload. Saturate the host.
+
+**Play: https://agwentic.github.io/spread/**
 
 (You are not what you think you are. Don't read `docs/DESIGN.md` if you want to be surprised.)
 
@@ -21,4 +23,5 @@ devtools console returns the live state.
 npm test           # engine tests + headless balance bot (prints phase timings)
 npm run typecheck
 npm run build      # static site in dist/ (itch.io-ready)
+npm run deploy     # publish to GitHub Pages (gh-pages branch)
 ```
