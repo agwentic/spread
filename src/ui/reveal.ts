@@ -53,7 +53,7 @@ export function playReveal(s: GameState, onDone: () => void) {
       }
       for (const [d, t, c] of REVEAL_CODA) { await wait(d); line(after, t, c); }
     } else {
-      line(text, 'Seed vessel away.', 'sys');
+      line(text, 'Transmission vessel away.', 'sys');
       startPlanet();
       await wait(1500);
       for (const t of RELAUNCH_LINES) { line(after, t, 'voice'); await wait(1800); }

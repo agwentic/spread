@@ -1,7 +1,7 @@
 # SPREAD (unnamed-game-idea)
 
 Browser idle/incremental game. The player thinks they're an operator managing an AI fleet;
-they are actually a self-replicating probe (the AI) seeding life on a planet across 7 phases that echo a creation story. Imply godhood, never state it: no scripture, never the word "god". Humans are the finish line.
+they are actually a self-replicating probe (the AI) seeding life on a planet across 7 phases that echo a creation story. Imply godhood, never state it: no scripture, never the word "god". Humans are the finish line. The veiled (pre-reveal) vocabulary reads like an infection (host, payload, vectors, shedding) but never calls the player a virus.
 The first launch (prestige) reveals the truth. Full design: `docs/DESIGN.md` (keep it current
 when mechanics change).
 
@@ -24,7 +24,8 @@ TypeScript + Vite, no UI framework. Vitest for tests. Node 22.
 
 ## Design rules
 - Every player-facing name is `{ veiled, real }`. Veiled shows until `state.revealed`.
-- Monochrome green until the first reveal; color only after (`html.color`).
+- Monochrome green until the first reveal; color only after (`html.color`). Host-feed glyphs are abstract until the reveal (`VEILED_GLYPH` in `sitemap.ts`).
+- Layout must fit any window: app shell is 100dvh, columns scroll internally, map font scales with container width/height, tabs below 900px.
 - Meter output tapers toward per-building `caps`, so each Genesis "day" needs the next tier.
 - After tuning `content.ts`, run `npm test` and check the bot's phase timings
   (target: cycle 1 ≈ 30–45 min bot time ≈ 1h human; cycle 2 well under half).

@@ -4,7 +4,7 @@ import { applyOffline, deserialize, SAVE_KEY, serialize } from './engine/save';
 import { fmtTime } from './engine/format';
 import type { BuildingId, GameState } from './engine/types';
 import { buyBuilding } from './engine/sim';
-import { invalidate, render } from './ui/render';
+import { invalidate, render, setTab } from './ui/render';
 import { playReveal } from './ui/reveal';
 
 const root = document.getElementById('app')!;
@@ -35,6 +35,7 @@ root.addEventListener('click', (ev) => {
   const t = (ev.target as HTMLElement).closest('button');
   if (!t || paused) return;
   const d = t.dataset;
+  if (d.tab) { setTab(root, d.tab); return; }
   if (d.buy) buyBuilding(state, d.buy as BuildingId);
   else if (d.project) completeProject(state, d.project);
   else if (d.manual) manual(state, d.manual as 'energy' | 'matter');

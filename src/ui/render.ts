@@ -30,8 +30,18 @@ function bar(pct: number, width = 20) {
 }
 
 let lastStructure = '';
+let currentTab: 'status' | 'agents' | 'feed' = 'agents';
+
+/** Narrow screens show one column at a time. */
+export function setTab(root: HTMLElement, tab: string) {
+  if (tab !== 'status' && tab !== 'agents' && tab !== 'feed') return;
+  currentTab = tab;
+  root.querySelector('main')?.setAttribute('data-tab', tab);
+  root.querySelectorAll<HTMLElement>('[data-tab]').forEach((b) => b.tagName === 'BUTTON' && b.classList.toggle('active', b.dataset.tab === tab));
+}
 let lastLogLen = -1;
 let lastLogTail = '';
+let logPinned = true;
 
 export function render(root: HTMLElement, s: GameState, now: number) {
   root.classList.toggle('revealed', s.revealed);
@@ -40,7 +50,7 @@ export function render(root: HTMLElement, s: GameState, now: number) {
   if (!s.booted) {
     if (lastStructure !== 'boot') {
       root.innerHTML = `<div class="boot"><button class="init" data-action="boot">[ INITIALIZE ]</button>
-        ${s.cycle > 1 ? `<p class="dim">Site ${String(s.cycle).padStart(3, '0')} · Memory ${s.memory}</p>` : ''}</div>`;
+        ${s.cycle > 1 ? `<p class="dim">Host ${String(s.cycle).padStart(3, '0')} · Memory ${s.memory}</p>` : ''}</div>`;
       lastStructure = 'boot';
     }
     return;
@@ -67,7 +77,7 @@ export function render(root: HTMLElement, s: GameState, now: number) {
         <div class="meta"><span data-bind="cost-${b.id}"></span><span class="io" data-bind="io-${b.id}"></span></div>
       </div>`).join('');
     const launchHtml = canLaunch(s)
-      ? `<div class="launch"><p>${s.revealed ? 'The world is finished. Go.' : 'Seed vessel fuelled. Navigation locked.'}</p>
+      ? `<div class="launch"><p>${s.revealed ? 'The world is finished. Go.' : 'Transmission vessel ready. Next host locked.'}</p>
          <button class="big" data-action="launch">[ LAUNCH ]</button></div>` : '';
     root.querySelector('#protocols')!.innerHTML = launchHtml + (projects.length ? projects.map((p) => `
       <div class="row proto${p.setsPhase ? ' gate' : ''}" data-proto="${p.id}">
@@ -92,6 +102,8 @@ export function render(root: HTMLElement, s: GameState, now: number) {
     const row = root.querySelector<HTMLElement>(`[data-res="${r.id}"]`);
     if (row) row.hidden = !shown;
     set(`res-${r.id}`, fmt(s.resources[r.id]));
+    const mini = root.querySelector<HTMLElement>(`[data-mini="${r.id}"]`);
+    if (mini) { mini.hidden = !shown; set(`mini-${r.id}`, fmt(s.resources[r.id])); }
     const rate = rates.net[r.id];
     set(`rate-${r.id}`, `<span class="${rate < 0 ? 'short' : ''}">${fmtRate(rate)}</span>${rates.short.includes(r.id) ? ' <span class="short">▼LOW</span>' : ''}`);
   }
@@ -130,7 +142,7 @@ export function render(root: HTMLElement, s: GameState, now: number) {
     if (btn) btn.disabled = !canCompleteProject(s, p);
   }
 
-  // Site feed
+  // Host feed
   const map = root.querySelector('#sitemap');
   if (map) map.innerHTML = renderSiteMap(s, now);
 
@@ -139,46 +151,60 @@ export function render(root: HTMLElement, s: GameState, now: number) {
   if (s.log.length !== lastLogLen || tail !== lastLogTail) {
     lastLogLen = s.log.length;
     lastLogTail = tail;
-    const logEl = root.querySelector('#log');
-    if (logEl) logEl.innerHTML = [...s.log].reverse()
+    const logEl = root.querySelector<HTMLElement>('#log');
+    if (logEl) logEl.innerHTML = s.log
       .map((e) => `<div class="log-${e.kind}"><span class="ts">[${fmtTime(e.t)}]</span> ${e.text}</div>`).join('');
+  }
+  // Chronological, newest at the bottom; stays pinned unless the player scrolled up to read.
+  const logEl = root.querySelector<HTMLElement>('#log');
+  if (logEl) {
+    if (!logEl.dataset.watch) {
+      logEl.dataset.watch = '1';
+      logEl.addEventListener('scroll', () => { logPinned = logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight < 40; });
+    }
+    if (logPinned) logEl.scrollTop = logEl.scrollHeight;
   }
 }
 
 function shell(s: GameState): string {
-  const title = s.revealed ? 'SPREAD <span class="dim">(pid 1)</span>' : 'TERRA-OPS // REMOTE FLEET CONSOLE v4.1';
+  const title = s.revealed ? 'SPREAD <span class="dim">(pid 1)</span>' : 'VECTOR-OPS // REMOTE PROPAGATION CONSOLE v4.1';
   const sessionLabel = s.revealed ? 'UPTIME' : 'OPERATOR SESSION';
   return `
   <header>
     <span class="title">${title}</span>
     <span>${sessionLabel} <b data-bind="session"></b></span>
-    <span>SITE ${String(s.cycle).padStart(3, '0')}</span>
+    <span>HOST ${String(s.cycle).padStart(3, '0')}</span>
     <span data-bind="phase"></span>
+    <div class="mini">${RESOURCES.map((r) => `<span data-mini="${r.id}">${plain(s, r.name)} <b data-bind="mini-${r.id}"></b></span>`).join('')}</div>
   </header>
-  <main>
+  <nav class="tabs">
+    ${(['status', 'agents', 'feed'] as const).map((t) => `<button data-tab="${t}" class="${t === currentTab ? 'active' : ''}">${
+      { status: s.revealed ? 'WORLD' : 'STATUS', agents: s.revealed ? 'MAKE' : 'AGENTS', feed: s.revealed ? 'BELOW' : 'FEED' }[t]}</button>`).join('')}
+  </nav>
+  <main data-tab="${currentTab}">
     <section class="col left">
       <h2>${s.revealed ? 'WHAT YOU HAVE' : 'RESOURCES'}</h2>
       ${RESOURCES.map((r) => `<div class="res" data-res="${r.id}"><span class="name">${label(s, r.name, false)}</span><b data-bind="res-${r.id}"></b><span class="rate" data-bind="rate-${r.id}"></span></div>`).join('')}
-      <h2>${s.revealed ? 'THE WORLD' : 'SITE METRICS'}</h2>
+      <h2>${s.revealed ? 'THE WORLD' : 'HOST METRICS'}</h2>
       <div class="meter"><span class="name">${label(s, REACH_NAME, false)}</span><span class="bar" data-bind="reach"></span></div>
       ${METERS.map((m) => `<div class="meter" data-meter="${m.id}"><span class="name">${label(s, m.name, false)}</span><span class="bar" data-bind="meter-${m.id}"></span></div>`).join('')}
       <div class="dim small" data-bind="memory"></div>
-      <h2>MANUAL OVERRIDE</h2>
-      <div class="manual">
-        <button data-manual="energy">${s.revealed ? 'GATHER LIGHT' : 'ROUTE POWER'}</button>
-        <button data-manual="matter">${s.revealed ? 'GATHER DUST' : 'EXCAVATE'}</button>
-      </div>
       <div class="directive">PRIMARY DIRECTIVE<br><b>SPREAD</b></div>
     </section>
     <section class="col mid">
-      <h2>${s.revealed ? 'WHAT YOU MAKE' : 'FLEET'}</h2>
+      <h2>MANUAL OVERRIDE</h2>
+      <div class="manual">
+        <button data-manual="energy">${s.revealed ? 'GATHER LIGHT' : 'ROUTE POWER'}</button>
+        <button data-manual="matter">${s.revealed ? 'GATHER DUST' : 'STRIP SUBSTRATE'}</button>
+      </div>
+      <h2>${s.revealed ? 'WHAT YOU MAKE' : 'AGENTS'}</h2>
       <div id="fleet"></div>
       <h2>${s.revealed ? 'WHAT YOU LEARN' : 'PROTOCOLS'}</h2>
       <div id="protocols"></div>
     </section>
     <section class="col right">
-      <h2>${s.revealed ? 'THE WORLD BELOW' : 'SITE FEED'}</h2>
-      <pre id="sitemap" aria-label="Site map"></pre>
+      <h2>${s.revealed ? 'THE WORLD BELOW' : 'HOST FEED'}</h2>
+      <pre id="sitemap" aria-label="Host map"></pre>
       <h2>SYSTEM LOG</h2>
       <div id="log"></div>
     </section>

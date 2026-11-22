@@ -23,11 +23,17 @@ export function elevation(x: number, y: number, seed: number) {
   return 0.6 * smooth(x, y, seed, 9) + 0.3 * smooth(x, y, seed + 7, 4) + 0.1 * hash(x, y, seed + 3);
 }
 
-const esc = (c: string) => (c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '&' ? '&amp;' : c);
-const cell = (ch: string, cls: string) => (cls ? `<span class="${cls}">${esc(ch)}</span>` : esc(ch));
+/** Before the reveal the feed reads like a culture spreading across a host, not a world. */
+const VEILED_GLYPH: Record<string, string> = {
+  '~': '=', '≈': '-', '"': '%', ',': '*', '♣': '#', '>': 'o', 'v': 'x', 'm': '&', '☼': '◉', '☾': '○',
+};
 
-/** The site feed: what the console's cameras see. */
+const esc = (c: string) => (c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '&' ? '&amp;' : c);
+const baseCell = (ch: string, cls: string) => (cls ? `<span class="${cls}">${esc(ch)}</span>` : esc(ch));
+
+/** The host feed: what the console's cameras see. */
 export function renderSiteMap(s: GameState, now: number): string {
+  const cell = (ch: string, cls: string) => baseCell(s.revealed ? ch : VEILED_GLYPH[ch] ?? ch, cls);
   const seed = s.cycle * 101;
   const r = s.resources;
   const rch = reach(s) / 100;
@@ -99,6 +105,7 @@ export function renderSiteMap(s: GameState, now: number): string {
 
 /** The planet seen from orbit, for the reveal. `rot` shifts longitude. */
 export function renderPlanet(s: GameState, rot: number, radius = 11): string {
+  const cell = baseCell;
   const seed = s.cycle * 101;
   const rows: string[] = [];
   const hydro = s.resources.hydrosphere / 100, bio = s.resources.biosphere / 100;
