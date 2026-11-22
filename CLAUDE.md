@@ -28,8 +28,11 @@ TypeScript + Vite, no UI framework. Vitest for tests. Node 22.
 - Monochrome green until the first reveal; color only after (`html.color`). Host-feed glyphs are abstract until the reveal (`VEILED_GLYPH` in `sitemap.ts`).
 - Layout must fit any window: app shell is 100dvh, columns scroll internally, map font scales with container width/height, tabs below 900px.
 - Meter output tapers toward per-building `caps`, so each Genesis "day" needs the next tier.
+- Thought sinks: AUTO protocols (per tier) and FOCUS (burns thought for ×2 output). Auto-deploy
+  holds back the cost of executable protocols so it never starves the chapter breaks. Bulk deploy is free UI.
 - After tuning `content.ts`, run `npm test` and check the bot's phase timings
-  (target: cycle 1 ≈ 30–45 min bot time ≈ 1h human; cycle 2 well under half).
+  (target: cycle 1 ≈ 30–45 min bot time ≈ 1h human; cycle 2 well under half). The bot also
+  reports manual / auto-only / focus-only runs for comparison.
 
 ## Conventions
 - Keep this file current: commands, layout and decisions that a new session needs to know.

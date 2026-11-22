@@ -14,6 +14,10 @@ test('a greedy bot can finish cycle 1 in a reasonable time, and cycle 2 faster',
   expect(one.state.time).toBeGreaterThan(20 * 60);
   expect(one.state.time).toBeLessThan(120 * 60);
 
+  report('cycle 1 (manual):', playCycle(undefined, undefined, undefined, {}));
+  report('cycle 1 (auto only):', playCycle(undefined, undefined, undefined, { auto: true }));
+  report('cycle 1 (focus only):', playCycle(undefined, undefined, undefined, { focus: true }));
+
   const two = playCycle(nextCycle(one.state));
   report('cycle 2:', two);
   expect(two.finished).toBe(true);

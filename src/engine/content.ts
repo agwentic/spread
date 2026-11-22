@@ -152,6 +152,20 @@ export const PROJECTS: ProjectDef[] = [
     effects: [{ kind: 'reachMult', value: 1.5 }],
   },
   {
+    id: 'focus', after: ['survey'],
+    name: { veiled: 'Priority Scheduling', real: 'Attention' },
+    desc: { veiled: 'Unlocks FOCUS: a focused agent class runs at ×2 output, burning compute. Not available for compute producers.', real: 'Unlocks FOCUS. What you attend to grows faster.' },
+    cost: { data: 300, energy: 1000 },
+    effects: [{ kind: 'focus' }],
+  },
+  {
+    id: 'autobase', after: ['survey'],
+    name: { veiled: 'Delegated Fabrication', real: 'Many Hands' },
+    desc: { veiled: 'Collectors, excavators, cores and nodes may self-deploy (AUTO). Spends at most half of any stock; never runs inputs negative.', real: 'They were all your hands. AUTO for the first machines.' },
+    cost: { data: 450, matter: 2000 },
+    effects: [{ kind: 'auto', targets: ['collector', 'excavator', 'core', 'relay'] }],
+  },
+  {
     id: 'deepcore', after: ['parallel', 'survey'],
     name: { veiled: 'Deep Core Mining', real: 'Bones of the World' },
     desc: { veiled: 'Excavator output ×3.', real: 'Excavator output ×3.' },
@@ -196,6 +210,13 @@ export const PROJECTS: ProjectDef[] = [
     effects: [{ kind: 'mult', target: 'core', value: 3 }],
   },
   {
+    id: 'autoenv', after: ['substrate'],
+    name: { veiled: 'Envelope Automation', real: 'Weather' },
+    desc: { veiled: 'Synthesizers and distillers may self-deploy (AUTO).', real: 'The sky and the rain keep themselves now.' },
+    cost: { data: 1800, matter: 6000 },
+    effects: [{ kind: 'auto', targets: ['processor', 'condenser'] }],
+  },
+  {
     id: 'optical', after: ['fructify'],
     name: { veiled: 'Optical Calibration', real: 'Clearing the Sky' },
     desc: { veiled: 'Begin Phase 4. Envelope clear enough to calibrate host feed.', real: 'Begin the fourth phase.' },
@@ -227,6 +248,13 @@ export const PROJECTS: ProjectDef[] = [
     onComplete: ['Candidate hosts catalogued: 4,113. Purpose: unspecified.'],
   },
   {
+    id: 'autolife', after: ['optical'],
+    name: { veiled: 'Payload Self-Propagation', real: 'It Seeds Itself' },
+    desc: { veiled: 'Injectors and fruiting bodies may self-deploy (AUTO).', real: 'Grass and trees spread without you.' },
+    cost: { data: 6000, biomass: 1500 },
+    effects: [{ kind: 'auto', targets: ['seeder', 'orchard'] }],
+  },
+  {
     id: 'replicator', after: ['luminary', 'tidal', 'stellar'],
     name: { veiled: 'Replication Protocol', real: 'Swimmers and Wings' },
     desc: { veiled: 'Begin Phase 5. Motile vectors that copy themselves.', real: 'Begin the fifth phase.' },
@@ -248,6 +276,13 @@ export const PROJECTS: ProjectDef[] = [
     cost: { data: 18000, biomass: 8000 },
     effects: [{ kind: 'reachMult', value: 1.5 }],
     onComplete: ['Airborne vectors emit acoustic patterns at dawn. Not part of firmware.'],
+  },
+  {
+    id: 'autovector', after: ['replicator'],
+    name: { veiled: 'Vector Self-Replication', real: 'More of Themselves' },
+    desc: { veiled: 'All vectors may self-deploy (AUTO). Fabricator input no longer required.', real: 'Swimmers, wings and beasts multiply on their own.' },
+    cost: { data: 20000, biomass: 10000 },
+    effects: [{ kind: 'auto', targets: ['aquatic', 'aerial', 'terrestrial'] }],
   },
   {
     id: 'terrestrial', after: ['schooling', 'migration'],

@@ -3,6 +3,14 @@ import type { Amounts, BuildingId, GameState, LogEntry, MeterId, ProjectDef, Res
 
 export const SAVE_VERSION = 1;
 export const MEMORY_BONUS = 0.1;
+/** Output multiplier for a focused building. */
+export const FOCUS_MULT = 2;
+/** Thought burned per second per focused unit, as a fraction of the building's base cost. */
+export const FOCUS_RATE = 0.01;
+/** Auto-deploy only spends when every cost is at most this share of the stock. */
+export const AUTO_SHARE = 0.5;
+/** Safety cap for MAX deploys. */
+const MAX_BULK = 1000;
 const LOG_LIMIT = 80;
 const METER_IDS: MeterId[] = METERS.map((m) => m.id);
 const isMeter = (id: StockId): id is MeterId => (METER_IDS as string[]).includes(id);
@@ -24,6 +32,8 @@ export function newGame(prev?: Pick<GameState, 'cycle' | 'memory' | 'revealed' |
     log: [],
     launched: false,
     lastSaved: Date.now(),
+    auto: {},
+    focus: {},
   };
 }
 
@@ -56,6 +66,10 @@ function effectProduct(s: GameState, match: (e: ProjectDef['effects'][number]) =
   let m = 1;
   for (const id of Object.keys(s.projects)) for (const e of PROJECT_MAP[id]?.effects ?? []) m *= match(e) ?? 1;
   return m;
+}
+
+function hasEffect(s: GameState, pred: (e: ProjectDef['effects'][number]) => boolean) {
+  return Object.keys(s.projects).some((id) => (PROJECT_MAP[id]?.effects ?? []).some(pred));
 }
 
 export function buildingMult(s: GameState, id: BuildingId) {
@@ -102,6 +116,92 @@ export function buyBuilding(s: GameState, id: BuildingId): boolean {
   pay(s, cost);
   s.buildings[id]++;
   return true;
+}
+
+/** Total cost of the next `n` units. */
+export function bulkCost(s: GameState, id: BuildingId, n: number): Amounts<ResId> {
+  const out: Amounts<ResId> = {};
+  for (let i = 0; i < n; i++) {
+    for (const [k, v] of Object.entries(buildingCost(s, id, s.buildings[id] + i)) as [ResId, number][]) out[k] = (out[k] ?? 0) + v;
+  }
+  return out;
+}
+
+/** How many units of `id` the current stock can pay for in one go. */
+export function maxAffordable(s: GameState, id: BuildingId): number {
+  const left = { ...s.resources };
+  let n = 0;
+  while (n < MAX_BULK) {
+    const cost = buildingCost(s, id, s.buildings[id] + n);
+    if (!(Object.entries(cost) as [ResId, number][]).every(([k, v]) => left[k] >= v)) break;
+    for (const [k, v] of Object.entries(cost) as [ResId, number][]) left[k] -= v;
+    n++;
+  }
+  return n;
+}
+
+/** Buys exactly `n` units (all or nothing). `n = Infinity` buys as many as affordable. Returns units bought. */
+export function buyBuildings(s: GameState, id: BuildingId, n: number): number {
+  if (!isBuildingUnlocked(s, id)) return 0;
+  const count = Number.isFinite(n) ? n : maxAffordable(s, id);
+  if (count <= 0) return 0;
+  const cost = bulkCost(s, id, count);
+  if (!canAfford(s, cost)) return 0;
+  pay(s, cost);
+  s.buildings[id] += count;
+  return count;
+}
+
+// ── Automation ─────────────────────────────────────────────────────────────
+
+export function isAutoUnlocked(s: GameState, id: BuildingId) {
+  return hasEffect(s, (e) => e.kind === 'auto' && e.targets.includes(id));
+}
+
+/** Thought-producing buildings cannot be focused (it would pay for itself). */
+export function isFocusUnlocked(s: GameState, id: BuildingId) {
+  return !('data' in BUILDING_MAP[id].produces) && hasEffect(s, (e) => e.kind === 'focus');
+}
+
+/** Thought per second that focusing all current units of `id` would burn. */
+export function focusBurn(s: GameState, id: BuildingId) {
+  const base = Object.values(BUILDING_MAP[id].cost).reduce((a, b) => a + (b ?? 0), 0);
+  return FOCUS_RATE * base * s.buildings[id];
+}
+
+const isFocused = (s: GameState, id: BuildingId) => !!s.focus[id] && s.buildings[id] > 0 && isFocusUnlocked(s, id);
+
+/** Stock that auto-deploy holds back: the cost of every protocol whose requirements are met. */
+export function autoReserve(s: GameState): Amounts<ResId> {
+  const out: Amounts<ResId> = {};
+  for (const p of visibleProjects(s)) {
+    if (unmetRequirements(s, p).length) continue;
+    for (const [k, v] of Object.entries(p.cost) as [ResId, number][]) out[k] = Math.max(out[k] ?? 0, v);
+  }
+  return out;
+}
+
+/**
+ * Self-deploying buildings: at most one unit per building per tick, only when it costs at most
+ * AUTO_SHARE of each stock above the protocol reserve, keeps every input it consumes in surplus,
+ * and still has a meter to raise.
+ */
+function autoDeploy(s: GameState, rates: Rates) {
+  if (!Object.values(s.auto).some(Boolean)) return;
+  const net = { ...rates.net };
+  const reserve = autoReserve(s);
+  for (let i = BUILDINGS.length - 1; i >= 0; i--) {
+    const b = BUILDINGS[i];
+    if (!s.auto[b.id] || !isAutoUnlocked(s, b.id) || !isBuildingUnlocked(s, b.id)) continue;
+    const cost = buildingCost(s, b.id);
+    if (!(Object.entries(cost) as [ResId, number][]).every(([k, v]) => (s.resources[k] - (reserve[k] ?? 0)) * AUTO_SHARE >= v)) continue;
+    if ((Object.entries(b.consumes) as [ResId, number][]).some(([k, v]) => net[k] < v)) continue;
+    const outs = Object.keys(b.produces) as StockId[];
+    if (!b.reach && outs.length && outs.every((k) => isMeter(k) && taper(s, b.id, k) <= 0.01)) continue;
+    pay(s, cost);
+    s.buildings[b.id]++;
+    for (const [k, v] of Object.entries(b.consumes) as [ResId, number][]) net[k] -= v;
+  }
 }
 
 export function isProjectVisible(s: GameState, p: ProjectDef) {
@@ -151,6 +251,10 @@ export interface Rates {
   eff: Record<BuildingId, number>;
   /** Resources currently limiting production. */
   short: ResId[];
+  /** Thought per second burned by focus. */
+  focusBurn: number;
+  /** Share of requested focus that thought could pay for, 0–1. */
+  focusEff: number;
 }
 
 const RESOURCE_BONUSED: StockId[] = ['matter', 'water', 'biomass', 'data'];
@@ -185,6 +289,12 @@ export function computeRates(s: GameState, dt = 1): Rates {
     ratio[k] = d <= 0 ? 1 : Math.min(1, avail / (d * dt));
     if (ratio[k]! < 0.999) short.push(k);
   }
+  // Focus burns thought; if thought runs short, every focused building gets the same partial boost.
+  let focusDemand = 0;
+  for (const b of BUILDINGS) if (isFocused(s, b.id)) focusDemand += focusBurn(s, b.id);
+  const thoughtAvail = s.resources.data + (gross.data ?? 0) * dt;
+  const focusEff = focusDemand <= 0 ? 1 : Math.min(1, thoughtAvail / (focusDemand * dt));
+  if (focusDemand > 0 && focusEff < 0.999) short.push('data');
   const net = Object.fromEntries(Object.keys(s.resources).map((k) => [k, 0])) as Record<StockId, number>;
   const eff = {} as Record<BuildingId, number>;
   for (const b of BUILDINGS) {
@@ -193,19 +303,23 @@ export function computeRates(s: GameState, dt = 1): Rates {
     eff[b.id] = e;
     const n = s.buildings[b.id];
     if (!n) continue;
-    for (const [k, v] of Object.entries(b.produces) as [StockId, number][]) net[k] += v * n * e * outputMult(s, b.id, k) * taper(s, b.id, k);
+    const f = isFocused(s, b.id) ? 1 + (FOCUS_MULT - 1) * focusEff : 1;
+    for (const [k, v] of Object.entries(b.produces) as [StockId, number][]) net[k] += v * n * e * f * outputMult(s, b.id, k) * taper(s, b.id, k);
     for (const [k, v] of Object.entries(b.consumes) as [ResId, number][]) net[k] -= v * n * e;
   }
-  return { net, eff, short };
+  const burn = focusDemand * focusEff;
+  net.data -= burn;
+  return { net, eff, short, focusBurn: burn, focusEff };
 }
 
 export function tick(s: GameState, dt: number) {
   if (!s.booted || s.launched) return;
-  const { net } = computeRates(s, dt);
-  for (const [k, v] of Object.entries(net) as [StockId, number][]) {
+  const rates = computeRates(s, dt);
+  for (const [k, v] of Object.entries(rates.net) as [StockId, number][]) {
     s.resources[k] = Math.max(0, s.resources[k] + v * dt);
     if (isMeter(k)) s.resources[k] = Math.min(100, s.resources[k]);
   }
+  autoDeploy(s, rates);
   s.time += dt;
   s.totalTime += dt;
   checkAnomalies(s);

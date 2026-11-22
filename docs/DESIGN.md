@@ -121,6 +121,26 @@ down in proportion (no hard failure). The player sees net rates and balances the
 Paperclips-style projects: cost compute plus resources, some gated by meter thresholds.
 Phase-advancing protocols are the "chapter breaks." Full list lives in `src/engine/content.ts`.
 
+### Thought sinks: automation and focus
+
+Thought (Compute) used to pile up between protocol gates with nothing to spend it on. Three
+systems give it somewhere to go:
+
+- **Bulk deploy (×1 / ×10 / MAX):** free, always available (a toggle above the agent list,
+  remembered per browser). ×10 is all-or-nothing; MAX buys as many as the stock allows.
+- **AUTO (self-deploy), bought per tier with thought:** Delegated Fabrication / *Many Hands*
+  (phase 2: collectors, excavators, cores, nodes), Envelope Automation / *Weather* (phase 3),
+  Payload Self-Propagation / *It Seeds Itself* (phase 4), Vector Self-Replication /
+  *More of Themselves* (phase 5). A toggled building buys one unit per tick when the unit costs
+  at most half of each stock above the **protocol reserve** (the cost of every protocol whose
+  requirements are met), when its inputs stay in surplus afterwards, and when it still has a
+  meter to raise. Story beat: the world starts building itself.
+- **FOCUS (Priority Scheduling / *Attention*, phase 2):** a per-building toggle. ×2 output,
+  burning `1%` of the building's base cost in thought per unit per second. If thought runs
+  short, every focused building gets the same partial boost. Thought producers (cores, fish)
+  cannot be focused, so focus can't pay for itself. This is the uncapped sink: it scales
+  with the fleet.
+
 ## 5. The breadcrumbs (anomaly log)
 
 Flavor lines that appear in the system log as conditions are met. They are the main way
@@ -187,7 +207,7 @@ shows its true name, with the old console label struck through beside it.
 
 ### Memory tree (post-prototype)
 Spend Memory on permanent upgrades: start with relays unlocked, faster phase 1, keep 1% of
-buildings, auto-buy, etc. Classic prestige-tree design.
+buildings, keep AUTO unlocks across cycles, etc. Classic prestige-tree design.
 
 ## 8. The long arc: the von Neumann lineage
 

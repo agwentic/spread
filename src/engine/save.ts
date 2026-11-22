@@ -19,6 +19,8 @@ export function deserialize(raw: string): GameState | null {
       ...data,
       resources: { ...base.resources, ...data.resources },
       buildings: { ...base.buildings, ...data.buildings },
+      auto: { ...data.auto },
+      focus: { ...data.focus },
     } as GameState;
   } catch {
     return null;

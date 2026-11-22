@@ -1,14 +1,14 @@
 // A greedy headless player used to sanity-check balance.
 import { BUILDINGS } from '../src/engine/content';
 import {
-  boot, buildingCost, buyBuilding, canAfford, canCompleteProject, canLaunch, computeRates,
-  isBuildingUnlocked, manual, unmetRequirements, newGame, phase, tick, visibleProjects,
+  boot, buildingCost, buyBuilding, canAfford, canCompleteProject, canLaunch, computeRates, focusBurn,
+  isAutoUnlocked, isBuildingUnlocked, isFocusUnlocked, manual, unmetRequirements, newGame, phase, tick, visibleProjects,
 } from '../src/engine/sim';
 import type { BuildingId, GameState } from '../src/engine/types';
 
 export interface BotResult { state: GameState; phaseTimes: Record<number, number>; finished: boolean }
 
-export function playCycle(start?: GameState, maxSeconds = 4 * 3600, clicksPerSec = 4): BotResult {
+export function playCycle(start?: GameState, maxSeconds = 4 * 3600, clicksPerSec = 4, useAutomation: { auto?: boolean; focus?: boolean } = { auto: true, focus: true }): BotResult {
   const s = start ?? newGame();
   boot(s);
   const phaseTimes: Record<number, number> = { 1: 0 };
@@ -22,6 +22,7 @@ export function playCycle(start?: GameState, maxSeconds = 4 * 3600, clicksPerSec
       complete(s, p.id);
     }
     buyGreedy(s);
+    automate(s, useAutomation);
     tick(s, 1);
     const ph = phase(s);
     if (phaseTimes[ph] === undefined) phaseTimes[ph] = s.time;
@@ -57,5 +58,21 @@ function buyGreedy(s: GameState) {
       if (!budget) return;
     }
     buyBuilding(s, options[0].id);
+  }
+}
+
+/** Turn on every AUTO, and FOCUS the priciest tiers while it burns at most half of thought income. */
+function automate(s: GameState, use: { auto?: boolean; focus?: boolean }) {
+  if (use.auto) for (const b of BUILDINGS) if (isAutoUnlocked(s, b.id)) s.auto[b.id] = true;
+  s.focus = {};
+  if (!use.focus) return;
+  const budget = 0.5 * computeRates(s).net.data;
+  let spent = 0;
+  for (const b of [...BUILDINGS].reverse()) {
+    if (!isFocusUnlocked(s, b.id) || !s.buildings[b.id]) continue;
+    const burn = focusBurn(s, b.id);
+    if (spent + burn > budget) continue;
+    s.focus[b.id] = true;
+    spent += burn;
   }
 }

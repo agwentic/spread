@@ -3,8 +3,8 @@ import { boot, completeProject, launch, log, manual, newGame, nextCycle, tick } 
 import { applyOffline, deserialize, SAVE_KEY, serialize } from './engine/save';
 import { fmtTime } from './engine/format';
 import type { BuildingId, GameState } from './engine/types';
-import { buyBuilding } from './engine/sim';
-import { invalidate, render, setTab } from './ui/render';
+import { buyBuildings } from './engine/sim';
+import { deployCount, getBuyMode, invalidate, render, setBuyMode, setTab } from './ui/render';
 import { playReveal } from './ui/reveal';
 
 const root = document.getElementById('app')!;
@@ -24,6 +24,9 @@ function load(): GameState {
   return newGame();
 }
 
+const BUY_MODE_KEY = 'spread.buymode';
+try { setBuyMode(localStorage.getItem(BUY_MODE_KEY) ?? '1'); } catch { /* storage unavailable */ }
+
 let state = load();
 let paused = false;
 
@@ -36,7 +39,12 @@ root.addEventListener('click', (ev) => {
   if (!t || paused) return;
   const d = t.dataset;
   if (d.tab) { setTab(root, d.tab); return; }
-  if (d.buy) buyBuilding(state, d.buy as BuildingId);
+  if (d.buymode) {
+    setBuyMode(d.buymode);
+    try { localStorage.setItem(BUY_MODE_KEY, String(getBuyMode())); } catch { /* ignore */ }
+  } else if (d.auto) state.auto[d.auto as BuildingId] = !state.auto[d.auto as BuildingId];
+  else if (d.focus) state.focus[d.focus as BuildingId] = !state.focus[d.focus as BuildingId];
+  else if (d.buy) buyBuildings(state, d.buy as BuildingId, deployCount(state, d.buy as BuildingId));
   else if (d.project) completeProject(state, d.project);
   else if (d.manual) manual(state, d.manual as 'energy' | 'matter');
   else if (d.action === 'boot') { boot(state); document.documentElement.classList.add('poweron'); }

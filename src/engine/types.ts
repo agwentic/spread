@@ -42,7 +42,11 @@ export interface Requirements {
 export type Effect =
   | { kind: 'mult'; target: BuildingId; value: number }
   | { kind: 'meterMult'; target: MeterId; value: number }
-  | { kind: 'reachMult'; value: number };
+  | { kind: 'reachMult'; value: number }
+  /** Lets these buildings deploy themselves (toggle per building). */
+  | { kind: 'auto'; targets: BuildingId[] }
+  /** Unlocks the FOCUS toggle: burn thought for extra output. */
+  | { kind: 'focus' };
 
 export interface ProjectDef {
   id: string;
@@ -93,4 +97,8 @@ export interface GameState {
   log: LogEntry[];
   launched: boolean;
   lastSaved: number;
+  /** Auto-deploy toggles (only effective once unlocked by a protocol). */
+  auto: Partial<Record<BuildingId, boolean>>;
+  /** Focus toggles: building runs at ×FOCUS_MULT output, burning thought. */
+  focus: Partial<Record<BuildingId, boolean>>;
 }

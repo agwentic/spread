@@ -1,8 +1,9 @@
 import { BUILDINGS, METERS, PHASES, PROJECTS, REACH_NAME, RESOURCES } from '../engine/content';
 import { fmt, fmtRate, fmtTime } from '../engine/format';
 import {
-  buildingCost, buildingMult, canAfford, canCompleteProject, canLaunch, computeRates, isBuildingUnlocked,
-  memoryMult, outputMult, phase, reach, unmetRequirements, visibleProjects,
+  bulkCost, buildingMult, canAfford, canCompleteProject, canLaunch, computeRates, FOCUS_MULT, focusBurn,
+  isAutoUnlocked, isBuildingUnlocked, isFocusUnlocked, maxAffordable, memoryMult, outputMult, phase, reach,
+  unmetRequirements, visibleProjects,
 } from '../engine/sim';
 import type { Amounts, GameState, Named, ResId } from '../engine/types';
 import { renderSiteMap } from './sitemap';
@@ -27,6 +28,17 @@ function costHtml(s: GameState, cost: Amounts<ResId>): string {
 function bar(pct: number, width = 20) {
   const filled = Math.round((pct / 100) * width);
   return '█'.repeat(filled) + '░'.repeat(width - filled);
+}
+
+export type BuyMode = 1 | 10 | 'max';
+let buyMode: BuyMode = 1;
+export function getBuyMode() { return buyMode; }
+export function setBuyMode(m: string) {
+  buyMode = m === 'max' ? 'max' : m === '10' ? 10 : 1;
+}
+/** Units the DEPLOY button buys right now (MAX shows 1 when nothing is affordable). */
+export function deployCount(s: GameState, id: Parameters<typeof maxAffordable>[1]) {
+  return buyMode === 'max' ? Math.max(1, maxAffordable(s, id)) : buyMode;
 }
 
 let lastStructure = '';
@@ -60,7 +72,7 @@ export function render(root: HTMLElement, s: GameState, now: number) {
   const ph = phase(s);
   const projects = visibleProjects(s);
   const buildings = BUILDINGS.filter((b) => isBuildingUnlocked(s, b.id));
-  const structure = [s.revealed, s.cycle, ph, buildings.map((b) => b.id).join(), projects.map((p) => p.id).join(), canLaunch(s)].join('|');
+  const structure = [s.revealed, s.cycle, ph, buildings.map((b) => b.id).join(), projects.map((p) => p.id).join(), Object.keys(s.projects).length, canLaunch(s)].join('|');
 
   if (structure !== lastStructure) {
     lastStructure = structure;
@@ -71,7 +83,9 @@ export function render(root: HTMLElement, s: GameState, now: number) {
         <div class="unit-head">
           <span class="name">${label(s, b.name)}</span>
           <span class="count" data-bind="count-${b.id}"></span>
-          <button data-buy="${b.id}">DEPLOY</button>
+          ${isFocusUnlocked(s, b.id) ? `<button class="toggle" data-focus="${b.id}" title="×${FOCUS_MULT} output, burns ${plain(s, RES_NAME.data)}">FOCUS</button>` : ''}
+          ${isAutoUnlocked(s, b.id) ? `<button class="toggle" data-auto="${b.id}" title="Deploy automatically">AUTO</button>` : ''}
+          <button class="deploy" data-buy="${b.id}">DEPLOY</button>
         </div>
         <div class="desc">${plain(s, b.desc)}</div>
         <div class="meta"><span data-bind="cost-${b.id}"></span><span class="io" data-bind="io-${b.id}"></span></div>
@@ -98,7 +112,7 @@ export function render(root: HTMLElement, s: GameState, now: number) {
 
   // Resources
   for (const r of RESOURCES) {
-    const shown = s.resources[r.id] > 0 || rates.net[r.id] !== 0;
+    const shown = r.id === 'energy' || r.id === 'matter' || s.resources[r.id] > 0 || rates.net[r.id] !== 0;
     const row = root.querySelector<HTMLElement>(`[data-res="${r.id}"]`);
     if (row) row.hidden = !shown;
     set(`res-${r.id}`, fmt(s.resources[r.id]));
@@ -116,10 +130,14 @@ export function render(root: HTMLElement, s: GameState, now: number) {
   const rc = reach(s);
   set('reach', `${bar(rc)} ${rc.toFixed(1)}%`);
   set('memory', s.memory ? `×${memoryMult(s).toFixed(2)} from ${s.memory} Memory` : '');
+  set('focus', rates.focusBurn > 0 || rates.focusEff < 1
+    ? `FOCUS burning ${fmt(rates.focusBurn, 2)} ${plain(s, RES_NAME.data)}/s${rates.focusEff < 0.999 ? ` <span class="short">(${Math.round(rates.focusEff * 100)}% funded)</span>` : ''}` : '');
+  root.querySelectorAll<HTMLButtonElement>('[data-buymode]').forEach((b) => b.classList.toggle('on', b.dataset.buymode === String(buyMode)));
 
   // Fleet
   for (const b of buildings) {
-    const cost = buildingCost(s, b.id);
+    const n = deployCount(s, b.id);
+    const cost = bulkCost(s, b.id, n);
     set(`count-${b.id}`, `×${s.buildings[b.id]}`);
     set(`cost-${b.id}`, costHtml(s, cost));
     const out = (Object.entries(b.produces) as [string, number][])
@@ -128,9 +146,17 @@ export function render(root: HTMLElement, s: GameState, now: number) {
     const eff = rates.eff[b.id];
     const throttle = s.buildings[b.id] && eff < 0.999 ? ` <span class="short">THROTTLED ${Math.round(eff * 100)}%</span>` : '';
     const reachTxt = b.reach ? ' · extends reach' : '';
-    set(`io-${b.id}`, `each: ${[...out, ...inp].join(', ')}${reachTxt}${buildingMult(s, b.id) > 1 ? ` (×${fmt(buildingMult(s, b.id))})` : ''}${throttle}`);
+    const focused = !!s.focus[b.id] && isFocusUnlocked(s, b.id) && s.buildings[b.id] > 0;
+    const focusTxt = focused ? ` <b>FOCUSED ×${fmt(1 + (FOCUS_MULT - 1) * rates.focusEff, 2)}</b> −${fmt(focusBurn(s, b.id), 2)} ${plain(s, RES_NAME.data)}/s` : '';
+    set(`io-${b.id}`, `each: ${[...out, ...inp].join(', ')}${reachTxt}${buildingMult(s, b.id) > 1 ? ` (×${fmt(buildingMult(s, b.id))})` : ''}${focusTxt}${throttle}`);
     const btn = root.querySelector<HTMLButtonElement>(`[data-buy="${b.id}"]`);
-    if (btn) btn.disabled = !canAfford(s, cost);
+    if (btn) {
+      btn.disabled = !canAfford(s, cost);
+      const txt = n === 1 && buyMode !== 'max' ? 'DEPLOY' : `DEPLOY ×${n}`;
+      if (btn.textContent !== txt) btn.textContent = txt;
+    }
+    root.querySelector(`[data-auto="${b.id}"]`)?.classList.toggle('on', !!s.auto[b.id]);
+    root.querySelector(`[data-focus="${b.id}"]`)?.classList.toggle('on', !!s.focus[b.id]);
   }
 
   // Protocols
@@ -189,6 +215,7 @@ function shell(s: GameState): string {
       <div class="meter"><span class="name">${label(s, REACH_NAME, false)}</span><span class="bar" data-bind="reach"></span></div>
       ${METERS.map((m) => `<div class="meter" data-meter="${m.id}"><span class="name">${label(s, m.name, false)}</span><span class="bar" data-bind="meter-${m.id}"></span></div>`).join('')}
       <div class="dim small" data-bind="memory"></div>
+      <div class="dim small" data-bind="focus"></div>
       <div class="directive">PRIMARY DIRECTIVE<br><b>SPREAD</b></div>
     </section>
     <section class="col mid">
@@ -197,7 +224,8 @@ function shell(s: GameState): string {
         <button data-manual="energy">${s.revealed ? 'GATHER LIGHT' : 'ROUTE POWER'}</button>
         <button data-manual="matter">${s.revealed ? 'GATHER DUST' : 'STRIP SUBSTRATE'}</button>
       </div>
-      <h2>${s.revealed ? 'WHAT YOU MAKE' : 'AGENTS'}</h2>
+      <h2 class="with-tools">${s.revealed ? 'WHAT YOU MAKE' : 'AGENTS'}
+        <span class="buymode">${(['1', '10', 'max'] as const).map((m) => `<button data-buymode="${m}">${m === 'max' ? 'MAX' : `×${m}`}</button>`).join('')}</span></h2>
       <div id="fleet"></div>
       <h2>${s.revealed ? 'WHAT YOU LEARN' : 'PROTOCOLS'}</h2>
       <div id="protocols"></div>

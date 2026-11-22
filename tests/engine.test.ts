@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
-  boot, buildingCost, buyBuilding, completeProject, computeRates, launch, memoryGain, newGame, nextCycle, phase, reach, tick,
+  autoReserve, boot, buildingCost, bulkCost, buyBuilding, buyBuildings, completeProject, focusBurn, maxAffordable, computeRates, launch, memoryGain, newGame, nextCycle, phase, reach, tick,
 } from '../src/engine/sim';
 import { applyOffline, deserialize, serialize } from '../src/engine/save';
 
@@ -90,5 +90,49 @@ describe('engine', () => {
   test('garbage saves are rejected', () => {
     expect(deserialize('not json')).toBeNull();
     expect(deserialize('{"version":999}')).toBeNull();
+  });
+
+  test('bulk deploy buys all-or-nothing, MAX buys as many as affordable', () => {
+    const s = newGame(); boot(s);
+    s.resources.matter = 1000;
+    const ten = bulkCost(s, 'collector', 10).matter!;
+    expect(ten).toBe(Array.from({ length: 10 }, (_, i) => Math.ceil(10 * 1.14 ** i)).reduce((a, b) => a + b));
+    expect(buyBuildings(s, 'collector', 10)).toBe(10);
+    expect(s.resources.matter).toBe(1000 - ten);
+    s.resources.matter = 50;
+    expect(buyBuildings(s, 'collector', 10)).toBe(0);
+    expect(s.resources.matter).toBe(50);
+    const max = maxAffordable(s, 'collector');
+    expect(buyBuildings(s, 'collector', Infinity)).toBe(max);
+    expect(s.buildings.collector).toBe(10 + max);
+  });
+
+  test('auto-deploy needs its protocol, then keeps inputs in surplus and leaves a reserve', () => {
+    const s = newGame(); boot(s);
+    s.resources.matter = 1e5; s.resources.energy = 0;
+    s.auto.excavator = true; s.auto.collector = true;
+    tick(s, 1);
+    expect(s.buildings.collector).toBe(0); // not unlocked yet
+    s.projects.autobase = true;
+    for (let i = 0; i < 200; i++) tick(s, 0.1);
+    expect(s.buildings.collector).toBeGreaterThan(0);
+    expect(computeRates(s).net.energy).toBeGreaterThanOrEqual(0); // never buys into an energy deficit
+    // A protocol whose requirements are met holds back its cost.
+    expect(autoReserve(s)).toEqual({});
+  });
+
+  test('focus doubles non-thought output and burns thought; unfunded focus does nothing', () => {
+    const s = newGame(); boot(s);
+    s.buildings.collector = 10;
+    s.projects.focus = true;
+    const base = computeRates(s).net.energy;
+    s.focus.collector = true;
+    expect(computeRates(s).net.energy).toBe(base); // no thought: unfunded
+    s.resources.data = 1e6;
+    const r = computeRates(s);
+    expect(r.net.energy).toBeCloseTo(base * 2);
+    expect(r.net.data).toBeCloseTo(-focusBurn(s, 'collector'));
+    s.buildings.core = 1; s.focus.core = true;
+    expect(computeRates(s).focusBurn).toBeCloseTo(focusBurn(s, 'collector')); // cores can't be focused
   });
 });
